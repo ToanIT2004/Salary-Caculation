@@ -189,9 +189,9 @@ function MyHomepage() {
                                 </tbody>
                             </table>
                         </div>
-                        <div className='card-footer'>
-                            <button className='btn btn-primary' onClick={handleSave}>
-                                Lưu
+                        <div className='card-footer d-flex justify-content-end'>
+                            <button className='btn btn-success' onClick={handleSave}>
+                                Tính
                             </button>
                         </div>
                     </div>
