@@ -1,8 +1,8 @@
-import { TimePicker } from 'antd';
+import { Button, TimePicker } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 // import styles from './styles.module.scss';
-import { delayTime, leaveEarly, formatVND } from './handle';
+import { delayTime, leaveEarly, formatVND, working_hours } from './handle';
 const format = 'HH:mm';
 
 function MyHomepage() {
@@ -18,9 +18,7 @@ function MyHomepage() {
             morningTimeStart: '08:00',
             morningTimeEnd: '12:00',
             afternoonTimeStart: '13:00',
-            afternoonTimeEnd: '17:00',
-            morningLeaveEarly: 0,
-            afternoonLeaveEarly: 0
+            afternoonTimeEnd: '17:00'
         }))
     );
 
@@ -29,6 +27,9 @@ function MyHomepage() {
 
     // State lưu thông tin leave_time
     const [leaveResult, setLeaveResult] = useState({});
+
+    // State lưu số giờ làm việc
+    const [workingHours, setWorkingHours] = useState(0);
 
     // Hàm cập nhật dữ liệu
     const handleChange = (index, field, value) => {
@@ -46,6 +47,22 @@ function MyHomepage() {
         // Về sớm
         const result_LeaveTime = leaveEarly(schedule);
         setLeaveResult(result_LeaveTime);
+
+        // Số giờ làm việc
+        const result_WorkingHours = working_hours(schedule);
+        setWorkingHours(result_WorkingHours);
+    };
+
+    const handleClearShift = (index, shift) => {
+        const updatedSchedule = [...schedule];
+        if (shift === 'morning') {
+            updatedSchedule[index].morningTimeStart = '';
+            updatedSchedule[index].morningTimeEnd = '';
+        } else if (shift === 'afternoon') {
+            updatedSchedule[index].afternoonTimeStart = '';
+            updatedSchedule[index].afternoonTimeEnd = '';
+        }
+        setSchedule(updatedSchedule); // Cập nhật lại state
     };
 
     // Nó sẽ chạy lại khi delayResult
@@ -81,31 +98,43 @@ function MyHomepage() {
                                                     <div className='d-flex justify-content-around'>
                                                         {/* Morning Start */}
                                                         <TimePicker
-                                                            defaultValue={dayjs('8:00', format)}
+                                                            value={
+                                                                schedule[index].morningTimeStart
+                                                                    ? dayjs(schedule[index].morningTimeStart, format)
+                                                                    : null
+                                                            }
                                                             format={format}
-                                                            // className={w100}
-                                                            // value là giá trị khi nhập
                                                             onChange={(value) =>
                                                                 handleChange(
                                                                     index,
                                                                     'morningTimeStart',
-                                                                    value ? value.format(format) : 0
+                                                                    value ? value.format(format) : ''
                                                                 )
                                                             }
                                                         />
-                                                        {/* Morning End */}
                                                         <TimePicker
-                                                            defaultValue={dayjs('12:00', format)}
+                                                            value={
+                                                                schedule[index].morningTimeEnd
+                                                                    ? dayjs(schedule[index].morningTimeEnd, format)
+                                                                    : null
+                                                            }
                                                             format={format}
-                                                            // className={w100}
                                                             onChange={(value) =>
                                                                 handleChange(
                                                                     index,
                                                                     'morningTimeEnd',
-                                                                    value ? value.format(format) : 0
+                                                                    value ? value.format(format) : ''
                                                                 )
                                                             }
                                                         />
+                                                        <Button
+                                                            type='primary'
+                                                            danger
+                                                            size='large'
+                                                            onClick={() => handleClearShift(index, 'morning')}
+                                                        >
+                                                            X
+                                                        </Button>
                                                     </div>
                                                 </td>
 
@@ -113,30 +142,45 @@ function MyHomepage() {
                                                     <div className='d-flex justify-content-around'>
                                                         {/* Afternoon Start */}
                                                         <TimePicker
-                                                            defaultValue={dayjs('13:00', format)}
+                                                            value={
+                                                                schedule[index].afternoonTimeStart
+                                                                    ? dayjs(schedule[index].afternoonTimeStart, format)
+                                                                    : null
+                                                            }
                                                             format={format}
-                                                            // className={w100}
                                                             onChange={(value) =>
                                                                 handleChange(
                                                                     index,
                                                                     'afternoonTimeStart',
-                                                                    value ? value.format(format) : 0
+                                                                    value ? value.format(format) : ''
                                                                 )
                                                             }
                                                         />
+
                                                         {/* Afternoon End */}
                                                         <TimePicker
-                                                            defaultValue={dayjs('17:00', format)}
+                                                            value={
+                                                                schedule[index].afternoonTimeEnd
+                                                                    ? dayjs(schedule[index].afternoonTimeEnd, format)
+                                                                    : null
+                                                            }
                                                             format={format}
-                                                            // className={w100}
                                                             onChange={(value) =>
                                                                 handleChange(
                                                                     index,
                                                                     'afternoonTimeEnd',
-                                                                    (value && value.format(format)) || 0
+                                                                    value ? value.format(format) : ''
                                                                 )
                                                             }
                                                         />
+                                                        <Button
+                                                            type='primary'
+                                                            danger
+                                                            size='large'
+                                                            onClick={() => handleClearShift(index, 'afternoon')}
+                                                        >
+                                                            X
+                                                        </Button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -156,42 +200,38 @@ function MyHomepage() {
                 <div className='col-lg-4'>
                     <div className='card mt-4'>
                         <div className='card-header text-center bg-primary text-white'>
-                            <h4>Thông Tin Đi Trễ</h4>
+                            <h4>Thông Tin</h4>
                         </div>
                         <div className='card-body'>
-                            <div className='mb-3 d-flex justify-content-between'>
+                            <div className='d-flex justify-content-between'>
+                                <h5>Số giờ làm việc:</h5>
+                                <p className='fs-5'>{workingHours || 0}</p>
+                            </div>
+                            <hr />
+
+                            <div className='d-flex justify-content-between'>
                                 <h5>Thời gian đi trễ:</h5>
                                 <p className='fs-5'>{delayResult.sumTimeLate || 0}</p>
                             </div>
-                            <div className='mb-3 d-flex justify-content-between'>
+                            <div className='d-flex justify-content-between'>
                                 <h5>Số lần đi trễ:</h5>
                                 <p className='fs-5'>{delayResult.sumLate || 0}</p>
                             </div>
-                            <div className='mb-3 d-flex justify-content-between'>
-                                <h5>Tổng tiền đi trễ:</h5>
-                                <p className='fs-5'>{formatVND(delayResult.sumPenaltyMoney || 0)}</p>
-                            </div>
-                        </div>
-                    </div>
+                            <hr />
 
-                    <div className='card mt-4'>
-                        <div className='card-header text-center bg-danger text-white'>
-                            <h4>Thông Tin Về Sớm</h4>
-                        </div>
-                        <div className='card-body'>
-                            <div className='mb-3 d-flex justify-content-between'>
+                            <div className='d-flex justify-content-between'>
                                 <h5>Thời gian về sớm</h5>
                                 <p className='fs-5'>{leaveResult.sumLeaveEarly || 0}</p>
                             </div>
 
-                            <div className='mb-3 d-flex justify-content-between'>
+                            <div className='d-flex justify-content-between'>
                                 <h5>Số lần về sớm</h5>
                                 <p className='fs-5'>{leaveResult.sumLeave || 0}</p>
                             </div>
-
-                            <div className='mb-3 d-flex justify-content-between'>
-                                <h5>Tổng tiền về sớm:</h5>
-                                <p className='fs-5'>{formatVND(leaveResult.sumMoneyLeavelEarly || 0)}</p>
+                            <hr />
+                            <div className='text-danger mb-3 d-flex justify-content-between'>
+                                <h1>Trừ:</h1>
+                                <h1>{formatVND(delayResult.sumPenaltyMoney + leaveResult.sumMoneyLeavelEarly || 0)}</h1>
                             </div>
                         </div>
                     </div>

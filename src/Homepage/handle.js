@@ -1,7 +1,10 @@
 const devideString = (string) => {
-   const result = string.split(":");
-   return result
-}
+   if (typeof string !== 'string') {
+      // console.error(`Invalid input for devideString: expected string but got ${typeof string}`);
+      return []; // Hoặc giá trị mặc định khác
+   }
+   return string.split(":");
+};
 
 function formatVND(amount) {
    if (!amount && amount !== 0) return '';
@@ -59,7 +62,7 @@ const delayTime = (schedule) => {
       if (atimeInMinutes > 780) {  // 780 phút = 01:00 PM
          aTimeLate = atimeInMinutes - 780;
          sumLate++; // Tăng số lần đi trễ
-         sumPenaltyMoney += penaltyForm(mTimeLate)
+         sumPenaltyMoney += penaltyForm(aTimeLate)
       }
 
       // Cộng dồn thời gian đi trễ
@@ -113,10 +116,26 @@ const leaveEarly = (schedule) => {
    }
 }
 
+// Xuất ra số giờ làm việc
+const working_hours = (schedule) => {
+   let sumHours = 56;
 
-const timeArriveLate = () => { }
-const timeLeaveEarly = () => { }
+   schedule.forEach((i) => {
+      if (i.morningTimeStart === '' || i.morningTimeEnd === '') {
+         sumHours -= 4
+      }
 
-export { delayTime, leaveEarly, formatVND, timeArriveLate, timeLeaveEarly }
+      if (i.afternoonTimeStart === '' || i.afternoonTimeEnd === '') {
+         sumHours -= 4
+      }
+   })
+
+
+
+   return sumHours
+}
+
+
+export { delayTime, leaveEarly, formatVND, working_hours }
 
 
