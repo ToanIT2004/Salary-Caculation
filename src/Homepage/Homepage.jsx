@@ -1,51 +1,55 @@
-// import timeLate from './handle';
 import { TimePicker } from 'antd';
-import day from './contants';
 import dayjs from 'dayjs';
-import { useState } from 'react';
-import { timeLate } from './late';
-// import { useState } from 'react';
+import { useEffect, useState } from 'react';
+// import styles from './styles.module.scss';
+import { delayTime, leaveEarly, formatVND } from './handle';
 const format = 'HH:mm';
 
 function MyHomepage() {
-    // State để lưu giá trị các TimePicker cho từng ngày
-    const [timeValues, setTimeValues] = useState(
-        day.map(() => ({
-            shift1: ['08:00', '12:00'], // Lưu dưới dạng chuỗi
-            shift2: ['13:00', '17:00'] // Lưu dưới dạng chuỗi
+    // const { w100 } = styles;
+
+    const day = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    // State để lưu dữ liệu từng ngày
+    const [schedule, setSchedule] = useState(
+        // Nó xuất ra 7 vị trí
+        day.map((day) => ({
+            day: day,
+            morningTimeStart: '08:00',
+            morningTimeEnd: '12:00',
+            afternoonTimeStart: '13:00',
+            afternoonTimeEnd: '17:00',
+            morningLeaveEarly: 0,
+            afternoonLeaveEarly: 0
         }))
     );
 
-    const [leaveEarly, setLeaveEarly] = useState(
-        day.map(() => ({
-            shift1: '', // Lưu giá trị về sớm của ca 1
-            shift2: '' // Lưu giá trị về sớm của ca 2
-        }))
-    );
+    // State lưu thông tin delay_time
+    const [delayResult, setDelayResult] = useState({});
 
-    const handleLeaveEarlyChange = (dayIndex, shift, value) => {
-        const updatedLeaveEarly = [...leaveEarly];
-        updatedLeaveEarly[dayIndex][shift] = value;
-        setLeaveEarly(updatedLeaveEarly);
+    // State lưu thông tin leave_time
+    const [leaveResult, setLeaveResult] = useState({});
+
+    // Hàm cập nhật dữ liệu
+    const handleChange = (index, field, value) => {
+        const updatedSchedule = [...schedule];
+
+        updatedSchedule[index][field] = value;
+        setSchedule(updatedSchedule);
     };
 
-    console.log(leaveEarly);
+    const handleSave = () => {
+        // Đến trễ
+        const result_DelayTime = delayTime(schedule);
+        setDelayResult(result_DelayTime);
 
-    const handleTimeChange = (dayIndex, shift, values) => {
-        const updatedTimeValues = [...timeValues];
-        updatedTimeValues[dayIndex][shift] = values
-            ? values.map((time) => (time ? time.format(format) : ''))
-            : []; // Nếu `values` là null, đặt mảng rỗng
-        setTimeValues(updatedTimeValues);
+        // Về sớm
+        const result_LeaveTime = leaveEarly(schedule);
+        setLeaveResult(result_LeaveTime);
     };
 
-    // Hàm in ra giá trị khi nhấn nút
-    const logValues = () => {
-        console.log(timeValues);
-        console.log('Leave Early Values:', leaveEarly);
-        // timeLate(timeValues);
-        // timeLate1(timeValues);
-    };
+    // Nó sẽ chạy lại khi delayResult
+    useEffect(() => {}, [delayResult, leaveResult]);
 
     return (
         <div className='container'>
@@ -61,119 +65,75 @@ function MyHomepage() {
                                     <tr className='text-center'>
                                         <td></td>
                                         <td>
-                                            <span className='badge text-bg-success'>
-                                                Ca 1
-                                            </span>
+                                            <span className='badge text-bg-success'>Ca 1</span>
                                         </td>
                                         <td>
-                                            <span className='badge text-bg-success'>
-                                                Ca 2
-                                            </span>
+                                            <span className='badge text-bg-success'>Ca 2</span>
                                         </td>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {day.map((d, index) => {
+                                    {day.map((day, index) => {
                                         return (
                                             <tr key={index}>
-                                                <th>{d}:</th>
-                                                <td className='text-center'>
+                                                <td>{day}</td>
+                                                <td>
                                                     <div className='d-flex justify-content-around'>
-                                                        <TimePicker.RangePicker
-                                                            value={timeValues[
-                                                                index
-                                                            ].shift1.map(
-                                                                (time) =>
-                                                                    time
-                                                                        ? dayjs(
-                                                                              time,
-                                                                              format
-                                                                          )
-                                                                        : null
-                                                            )}
+                                                        {/* Morning Start */}
+                                                        <TimePicker
+                                                            defaultValue={dayjs('8:00', format)}
                                                             format={format}
-                                                            onChange={(
-                                                                values
-                                                            ) =>
-                                                                handleTimeChange(
+                                                            // className={w100}
+                                                            // value là giá trị khi nhập
+                                                            onChange={(value) =>
+                                                                handleChange(
                                                                     index,
-                                                                    'shift1',
-                                                                    values
+                                                                    'morningTimeStart',
+                                                                    value ? value.format(format) : 0
                                                                 )
                                                             }
-                                                            style={{
-                                                                width: '250px'
-                                                            }}
                                                         />
-                                                        <input
-                                                            type='text'
-                                                            placeholder='Về sớm'
-                                                            className='form-control'
-                                                            style={{
-                                                                width: '80px'
-                                                            }}
-                                                            value={
-                                                                leaveEarly[
-                                                                    index
-                                                                ].shift1
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleLeaveEarlyChange(
+                                                        {/* Morning End */}
+                                                        <TimePicker
+                                                            defaultValue={dayjs('12:00', format)}
+                                                            format={format}
+                                                            // className={w100}
+                                                            onChange={(value) =>
+                                                                handleChange(
                                                                     index,
-                                                                    'shift1',
-                                                                    e.target
-                                                                        .value
+                                                                    'morningTimeEnd',
+                                                                    value ? value.format(format) : 0
                                                                 )
                                                             }
                                                         />
                                                     </div>
                                                 </td>
-                                                <td className='text-center'>
+
+                                                <td>
                                                     <div className='d-flex justify-content-around'>
-                                                        <TimePicker.RangePicker
-                                                            value={timeValues[
-                                                                index
-                                                            ].shift2.map(
-                                                                (time) =>
-                                                                    time
-                                                                        ? dayjs(
-                                                                              time,
-                                                                              format
-                                                                          )
-                                                                        : null
-                                                            )}
+                                                        {/* Afternoon Start */}
+                                                        <TimePicker
+                                                            defaultValue={dayjs('13:00', format)}
                                                             format={format}
-                                                            onChange={(
-                                                                values
-                                                            ) =>
-                                                                handleTimeChange(
+                                                            // className={w100}
+                                                            onChange={(value) =>
+                                                                handleChange(
                                                                     index,
-                                                                    'shift2',
-                                                                    values
+                                                                    'afternoonTimeStart',
+                                                                    value ? value.format(format) : 0
                                                                 )
                                                             }
-                                                            style={{
-                                                                width: '250px'
-                                                            }}
                                                         />
-                                                        <input
-                                                            type='text'
-                                                            placeholder='Về sớm'
-                                                            className='form-control'
-                                                            style={{
-                                                                width: '80px'
-                                                            }}
-                                                            value={
-                                                                leaveEarly[
-                                                                    index
-                                                                ].shift2
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleLeaveEarlyChange(
+                                                        {/* Afternoon End */}
+                                                        <TimePicker
+                                                            defaultValue={dayjs('17:00', format)}
+                                                            format={format}
+                                                            // className={w100}
+                                                            onChange={(value) =>
+                                                                handleChange(
                                                                     index,
-                                                                    'shift2',
-                                                                    e.target
-                                                                        .value
+                                                                    'afternoonTimeEnd',
+                                                                    (value && value.format(format)) || 0
                                                                 )
                                                             }
                                                         />
@@ -186,12 +146,53 @@ function MyHomepage() {
                             </table>
                         </div>
                         <div className='card-footer'>
-                            <button
-                                onClick={logValues}
-                                className='btn btn-primary'
-                            >
-                                Tính
+                            <button className='btn btn-primary' onClick={handleSave}>
+                                Lưu
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className='col-lg-4'>
+                    <div className='card mt-4'>
+                        <div className='card-header text-center bg-primary text-white'>
+                            <h4>Thông Tin Đi Trễ</h4>
+                        </div>
+                        <div className='card-body'>
+                            <div className='mb-3 d-flex justify-content-between'>
+                                <h5>Thời gian đi trễ:</h5>
+                                <p className='fs-5'>{delayResult.sumTimeLate || 0}</p>
+                            </div>
+                            <div className='mb-3 d-flex justify-content-between'>
+                                <h5>Số lần đi trễ:</h5>
+                                <p className='fs-5'>{delayResult.sumLate || 0}</p>
+                            </div>
+                            <div className='mb-3 d-flex justify-content-between'>
+                                <h5>Tổng tiền đi trễ:</h5>
+                                <p className='fs-5'>{formatVND(delayResult.sumPenaltyMoney || 0)}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className='card mt-4'>
+                        <div className='card-header text-center bg-danger text-white'>
+                            <h4>Thông Tin Về Sớm</h4>
+                        </div>
+                        <div className='card-body'>
+                            <div className='mb-3 d-flex justify-content-between'>
+                                <h5>Thời gian về sớm</h5>
+                                <p className='fs-5'>{leaveResult.sumLeaveEarly || 0}</p>
+                            </div>
+
+                            <div className='mb-3 d-flex justify-content-between'>
+                                <h5>Số lần về sớm</h5>
+                                <p className='fs-5'>{leaveResult.sumLeave || 0}</p>
+                            </div>
+
+                            <div className='mb-3 d-flex justify-content-between'>
+                                <h5>Tổng tiền về sớm:</h5>
+                                <p className='fs-5'>{formatVND(leaveResult.sumMoneyLeavelEarly || 0)}</p>
+                            </div>
                         </div>
                     </div>
                 </div>

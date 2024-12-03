@@ -1,0 +1,9 @@
+@use '../assets/styles/mixin.module' as *;
+
+.w100 {
+    @include width(100px);
+}
+
+.w80 {
+    @include width(80px);
+}
